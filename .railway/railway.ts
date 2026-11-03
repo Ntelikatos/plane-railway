@@ -157,6 +157,7 @@ const beatWorker = service("beat-worker", {
 
 const live = service("live", {
   source: image(`makeplane/plane-live:${PLANE}`),
+  healthcheck: "/live/health",
   replicas,
   env: {
     PORT: v("3000", "Port the server listens on"),
@@ -167,18 +168,19 @@ const live = service("live", {
 });
 
 // web and admin serve static files with nginx on 3000; space is a Node server
-// that reads PORT. PORT also tells Railway where to run the healthcheck.
+// that reads PORT and serves only under /spaces/. PORT also tells Railway
+// where to run the healthcheck.
 // https://docs.railway.com/deployments/healthchecks#configure-the-healthcheck-port
-const frontend = (name: string, img: string) =>
+const frontend = (name: string, img: string, healthcheck = "/") =>
   service(name, {
     source: image(`${img}:${PLANE}`),
-    healthcheck: "/",
+    healthcheck,
     replicas,
     env: { PORT: v("3000", "Port Plane's image serves on; the healthcheck uses it") },
   });
 
 const web = frontend("web", "makeplane/plane-frontend");
-const space = frontend("space", "makeplane/plane-space");
+const space = frontend("space", "makeplane/plane-space", "/spaces/");
 const admin = frontend("admin", "makeplane/plane-admin");
 
 const host = (svc: string) => v(`\${{${svc}.RAILWAY_PRIVATE_DOMAIN}}`, `Private hostname of ${svc}`);
@@ -186,7 +188,7 @@ const host = (svc: string) => v(`\${{${svc}.RAILWAY_PRIVATE_DOMAIN}}`, `Private 
 // Plane's Caddy proxy with the upstreams pointed at Railway's private
 // hostnames. The only public service. Deploying from a fork? Point this at it.
 const proxy = service("proxy", {
-  source: github("Ntelikatos/plane-railway", { branch: "main", rootDirectory: "proxy", checkSuites: true }),
+  source: github("Ntelikatos/plane-railway", { branch: "main", rootDirectory: "proxy" }),
   build: { watchPatterns: ["/proxy/**"] },
   healthcheck: "/",
   replicas,
