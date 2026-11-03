@@ -1,6 +1,6 @@
 # Plane Community Edition on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/4R9BAU?utm_medium=integration&utm_source=button&utm_campaign=plane-ce)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/plane-community-edition?utm_medium=integration&utm_source=button&utm_campaign=plane-ce)
 [![Validate Config](https://github.com/Ntelikatos/plane-railway/actions/workflows/validate.yml/badge.svg)](https://github.com/Ntelikatos/plane-railway/actions/workflows/validate.yml)
 
 Self-host [Plane](https://plane.so), the open-source project management tool, on Railway in one click. This template runs Plane Community Edition **v1.4.3** from Plane's official Docker Compose setup. Every password is generated for you, the data sits on Railway volumes, and you get one HTTPS address.
