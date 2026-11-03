@@ -11,7 +11,7 @@ Railway makes a template from a live project (`railway templates create`, [CLI d
 - volume mount paths and the public domain with its port
 - every variable whose value contains a `${{...}}` expression or reference
 
-It blanks plain values such as `PORT=8000` and has no variable descriptions. Railway's public API has no call that edits a template's contents. Its template mutations are `templateGenerate`, `templatePublish`, `templateUnpublish`, `templateDelete`, `templateClone`, `templateVolumeUpdate` and the deploy calls (`railway api search template`). So the plain values and descriptions are entered once in the template editor, and `scripts/template.mjs --check` proves they equal the code.
+It blanks plain values such as `PORT=8000` and has no variable descriptions. Railway's public API has no call that edits a template's contents. Its template mutations are `templateGenerate`, `templatePublish`, `templateUnpublish`, `templateDelete`, `templateClone`, `templateRevert`, `templateServiceSourceEject`, `templateVolumeUpdate` and the deploy calls (`railway api search template`). So the plain values and descriptions are entered once in the template editor, and `scripts/template.mjs --check` proves they equal the code.
 
 Every `templates create` makes a new template with a new code. Never regenerate the published template, because that would break the deploy button and every existing deployment's update path. Change it in the editor instead.
 

@@ -1,47 +1,47 @@
 # Deploy and Host Plane Community Edition with Railway
 
-Plane is an open-source project management tool: work items, cycles, modules, pages, intake and estimates, with a REST API and webhooks. This template runs Plane Community Edition, the AGPL-3.0 edition, as one Railway project with a database, a queue, file storage and one public HTTPS domain.
+Plane is an open-source project management tool. It has work items, cycles, modules, pages, intake and estimates, plus a REST API and webhooks. This template runs Plane Community Edition, the free AGPL-3.0 edition, with no user limit.
 
 ## About Hosting Plane Community Edition
 
-Plane's official self-hosted setup is a Docker Compose file of twelve containers. This template translates that file service by service. You get Plane's own pinned images for the web app, the API, the background workers, the real-time server, the admin panel and the public pages. Postgres, Valkey, RabbitMQ and S3-compatible storage come from the same compose file, each on a Railway volume. Every password and key is generated when you deploy, and the services talk over Railway's private network. Only the proxy is public. Open the domain and create the first admin account at `/god-mode`.
+This template runs Plane's official Docker Compose setup on Railway, one service per container. It uses Plane's own pinned images for the app, the API, the background jobs, live editing, the admin pages and public pages. Postgres, Valkey, RabbitMQ and file storage come from the same setup, each with a Railway volume. Every password is generated when you deploy, so there is nothing to fill in. The services talk over Railway's private network, and only the proxy is public. You get one HTTPS address, and you create the admin account on it.
 
 ## Common Use Cases
 
-- **Team project management**: work items, cycles and modules for a software team, without a per-seat licence
-- **A self-hosted alternative to Jira or Linear**: your data stays in your own Railway project
-- **Automation over the REST API**: create and update work items from scripts, CI or AI agents with an API token
-- **Docs next to the work**: Plane pages for specs and notes in the same workspace
+- Project management for a team, without paying per seat
+- A self-hosted alternative to Jira or Linear, with your data in your own Railway project
+- Work items created and updated by scripts, CI or AI agents through the REST API
+- Specs and notes kept next to the work, in Plane pages
 
 ## Dependencies for Plane Community Edition Hosting
 
-- **Postgres 15**: Plane's main database
-- **Valkey**: cache and sessions
-- **RabbitMQ**: queue for Plane's background workers
-- **MinIO-compatible object storage**: uploaded files and attachments
+- **Postgres 15**: the database
+- **Valkey**: the cache
+- **RabbitMQ**: the queue for background jobs
+- **S3-compatible file storage**: uploads and attachments
 
 ### Deployment Dependencies
 
 - [Plane self-hosting docs](https://developers.plane.so/self-hosting/overview)
 - [Plane on GitHub](https://github.com/makeplane/plane)
-- [Railway volumes](https://docs.railway.com/volumes) and [volume backups](https://docs.railway.com/volumes/backups)
-- [Source code of this template on GitHub](https://github.com/Ntelikatos/plane-railway)
+- [Railway volume backups](https://docs.railway.com/volumes/backups)
+- [Source code of this template](https://github.com/Ntelikatos/plane-railway)
 
 ### Implementation Details
 
-After the deploy finishes, open the `proxy` service's public domain:
+After the deploy:
 
-1. Go to `https://<your-domain>/god-mode` and create the instance admin account.
-2. Go to `https://<your-domain>` and create your first workspace.
-3. For API access, create a token under **Profile settings > Personal access tokens** and send it in the `X-API-Key` header to `https://<your-domain>/api/v1/`.
+1. Wait until all twelve services are online, then open the public URL of the `proxy` service.
+2. Click **Get started** and create the admin account straight away. Until you do, anyone who finds the URL can create it instead.
+3. Create your workspace in the popup.
+4. Open **Authentication** in the admin menu and turn off **Allow anyone to sign up even without an invite**.
+5. Go to your Plane URL and sign in with the same email and password.
 
-Plan for at least 4 GB of RAM in total across the services. Plane recommends 2 CPU cores and 4 GB of RAM, and 8 GB for production. Turn on daily backups for the `plane-db` and `plane-minio` volumes in each service's **Backups** tab.
+Turn on daily backups for the `plane-db` and `plane-minio` volumes in each service's **Backups** tab.
 
 ### Why Deploy Plane Community Edition on Railway?
 
-Railway is a singular platform to deploy your infrastructure stack. Railway will host your infrastructure so you don't have to deal with configuration, while allowing you to vertically and horizontally scale it.
-
-By deploying Plane Community Edition on Railway, you are one step closer to supporting a complete full-stack application with minimal burden. Host your servers, databases, AI agents, and more on Railway.
+Railway runs all twelve services, their volumes and backups in one project, with no servers to manage. You pay for what Plane uses, and you can give any service more resources when your team grows.
 
 ---
 
