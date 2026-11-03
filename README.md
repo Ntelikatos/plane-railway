@@ -59,7 +59,7 @@ Railway bills for what the services use, not for a fixed size ([pricing](https:/
 | Volume storage | $0.15 per GB per month |
 | Network egress | $0.05 per GB |
 
-Memory is most of the bill. All twelve services run all the time, even when nobody uses Plane. CPU stays low when Plane is idle. Volumes grow with your data and uploads. Traffic between the services is free.
+An idle deploy measured 1.31 GB of memory and 0.01 vCPU across all services, about $14 a month ([test report](docs/test-report.md#memory-cpu-and-cost)). Memory is most of the bill. All twelve services run all the time, even when nobody uses Plane. CPU stays low when Plane is idle. Volumes grow with your data and uploads. Traffic between the services is free.
 
 On the Hobby plan a volume holds at most 5 GB. Larger data needs the Pro plan ([plans](https://docs.railway.com/pricing/plans)).
 
