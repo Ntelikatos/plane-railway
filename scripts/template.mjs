@@ -39,12 +39,6 @@ if (!process.argv.includes("--check")) {
 
 const code = readFileSync(new URL("../README.md", import.meta.url), "utf8").match(/railway\.com\/deploy\/([\w-]+)/)?.[1];
 if (!code) throw new Error("README has no deploy button");
-// The template is generated from a project that builds the proxy from main,
-// so the first merge happens before the template exists.
-if (code === "TEMPLATE_CODE") {
-  console.log("::notice::README has no template code yet; nothing to compare.");
-  process.exit(0);
-}
 
 const res = await fetch("https://backboard.railway.com/graphql/v2", {
   method: "POST",

@@ -1,6 +1,6 @@
 # Plane Community Edition on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/TEMPLATE_CODE?utm_medium=integration&utm_source=button&utm_campaign=plane-ce)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/4R9BAU?utm_medium=integration&utm_source=button&utm_campaign=plane-ce)
 [![Validate Config](https://github.com/Ntelikatos/plane-railway/actions/workflows/validate.yml/badge.svg)](https://github.com/Ntelikatos/plane-railway/actions/workflows/validate.yml)
 
 Self-host [Plane](https://plane.so), the open-source project management tool, on Railway in one click. This template runs Plane Community Edition **v1.4.3** from Plane's official Docker Compose setup. Every password is generated for you, the data sits on Railway volumes, and you get one HTTPS address.
@@ -14,9 +14,10 @@ Community Edition is Plane's free AGPL-3.0 edition: work items, cycles, modules,
 3. Open the public URL of the `proxy` service and click **Get started**.
    Do this straight away. Until you create the admin account, anyone who finds the URL can create it instead.
 4. Fill in the setup form (name, email, company name, password) and click **Continue**. This creates the admin account for your Plane instance.
-5. In the **Create workspace** popup, give your workspace a name and click **Create workspace**.
+5. Click **Create workspace** in the popup. Give your workspace a name and a team size, then click **Create workspace**.
 6. Open **Authentication** in the admin menu and turn off **Allow anyone to sign up even without an invite**. Now only people you invite can join.
-7. Go to your Plane URL, sign in with the same email and password, and confirm your name. You are now on your Plane dashboard.
+7. Go to your Plane URL, sign in with the same email and password, and confirm your name.
+8. Close the welcome popup with **No thanks**. You are now on your Plane dashboard.
 
 The admin pages stay at `/god-mode` on your Plane URL.
 
