@@ -1,0 +1,52 @@
+name: Validate Config
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  iac:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check .railway/railway.ts
+        run: npm run check
+
+      - name: Evaluate .railway/railway.ts
+        run: node scripts/template.mjs
+
+      - name: Published template matches .railway/railway.ts
+        run: node scripts/template.mjs --check
+
+      - name: Plane images share one release tag
+        run: |
+          tags=$(grep -ohE 'makeplane/plane-[a-z]+:v[0-9.]+|const PLANE = "v[0-9.]+"' .railway/railway.ts proxy/Dockerfile \
+            | grep -oE 'v[0-9.]+' | sort -u)
+          echo "$tags"
+          test "$(echo "$tags" | wc -l)" -eq 1
+
+  caddyfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate Caddyfile
+        run: |
+          image=$(grep -oE '^FROM [^ ]+' proxy/Dockerfile | cut -d' ' -f2)
+          docker run --rm -v "$PWD/proxy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -e PORT=80 -e BUCKET_NAME=uploads \
+            -e WEB_HOST=web -e SPACE_HOST=space -e ADMIN_HOST=admin -e LIVE_HOST=live \
+            -e API_HOST=api -e MINIO_HOST=plane-minio \
+            "$image" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile

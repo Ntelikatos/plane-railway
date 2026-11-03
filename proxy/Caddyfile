@@ -1,0 +1,43 @@
+# Derived from apps/proxy/Caddyfile.ce in makeplane/plane v1.4.3
+# (Copyright (c) 2023-present Plane Software, Inc. and contributors, AGPL-3.0-only).
+# Changed: upstream hosts come from Railway private hostnames instead of
+# Docker Compose service names, the site listens on Railway's PORT, and the
+# ACME settings are gone because Railway terminates TLS before traffic
+# reaches this proxy.
+
+(plane_proxy) {
+	request_body {
+		max_size {$FILE_SIZE_LIMIT:5242880}
+	}
+
+	redir /spaces /spaces/ permanent
+	reverse_proxy /spaces/* {$SPACE_HOST}:3000
+
+	redir /god-mode /god-mode/ permanent
+	reverse_proxy /god-mode/* {$ADMIN_HOST}:3000
+
+	reverse_proxy /live/* {$LIVE_HOST}:3000
+
+	reverse_proxy /api/* {$API_HOST}:8000
+
+	reverse_proxy /auth/* {$API_HOST}:8000
+
+	reverse_proxy /static/* {$API_HOST}:8000
+
+	reverse_proxy /{$BUCKET_NAME}/* {$MINIO_HOST}:9000
+	reverse_proxy /{$BUCKET_NAME} {$MINIO_HOST}:9000
+
+	reverse_proxy /* {$WEB_HOST}:3000
+}
+
+{
+	servers {
+		max_header_size 25MB
+		client_ip_headers X-Forwarded-For X-Real-IP
+		trusted_proxies static {$TRUSTED_PROXIES:0.0.0.0/0}
+	}
+}
+
+:{$PORT} {
+	import plane_proxy
+}
