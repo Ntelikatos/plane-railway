@@ -44,16 +44,16 @@ const db = service("plane-db", {
   replicas,
   volumeMounts: { "/var/lib/postgresql/data": pgdata },
   env: {
-    POSTGRES_USER: v("plane", "Database user"),
+    POSTGRES_USER: v("plane", "Database user name"),
     POSTGRES_DB: v("plane", "Database name"),
-    POSTGRES_PASSWORD: v(secret(32), "Database password, generated at deploy"),
+    POSTGRES_PASSWORD: v(secret(32), "Database password. Railway creates it when you deploy"),
     // A Railway volume has lost+found at its root, which initdb refuses.
-    PGDATA: v("/var/lib/postgresql/data/pgdata", "Data directory, one level inside the volume"),
+    PGDATA: v("/var/lib/postgresql/data/pgdata", "Folder in the volume where Postgres keeps its data"),
     DATABASE_URL: v(
       "postgresql://${{POSTGRES_USER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{POSTGRES_DB}}",
-      "Connection string the Plane services use",
+      "Address the Plane services use to reach the database",
     ),
-    RAILWAY_DEPLOYMENT_DRAINING_SECONDS: v("60", "Seconds Postgres gets to shut down cleanly"),
+    RAILWAY_DEPLOYMENT_DRAINING_SECONDS: v("60", "Seconds Postgres gets to shut down safely"),
   },
 });
 
@@ -63,10 +63,10 @@ const redis = service("plane-redis", {
   replicas,
   volumeMounts: { "/data": redisdata },
   env: {
-    VALKEY_PASSWORD: v(secret(32), "Valkey password, generated at deploy"),
+    VALKEY_PASSWORD: v(secret(32), "Cache password. Railway creates it when you deploy"),
     REDIS_URL: v(
       "redis://default:${{VALKEY_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:6379/",
-      "Connection string the Plane services use",
+      "Address the Plane services use to reach the cache",
     ),
   },
 });
@@ -76,15 +76,15 @@ const mq = service("plane-mq", {
   replicas,
   volumeMounts: { "/var/lib/rabbitmq": mqdata },
   env: {
-    RABBITMQ_DEFAULT_USER: v("plane", "Broker user"),
-    RABBITMQ_DEFAULT_PASS: v(secret(32), "Broker password, generated at deploy"),
-    RABBITMQ_DEFAULT_VHOST: v("plane", "Broker virtual host"),
+    RABBITMQ_DEFAULT_USER: v("plane", "Queue user name"),
+    RABBITMQ_DEFAULT_PASS: v(secret(32), "Queue password. Railway creates it when you deploy"),
+    RABBITMQ_DEFAULT_VHOST: v("plane", "Queue namespace for Plane"),
     // RabbitMQ keys its data directory by node name, which defaults to the
     // container hostname. Railway changes the hostname on every deploy.
-    RABBITMQ_NODENAME: v("rabbit@localhost", "Fixed node name, so queues survive redeploys"),
+    RABBITMQ_NODENAME: v("rabbit@localhost", "Fixed name, so queued jobs survive a redeploy"),
     AMQP_URL: v(
       "amqp://${{RABBITMQ_DEFAULT_USER}}:${{RABBITMQ_DEFAULT_PASS}}@${{RAILWAY_PRIVATE_DOMAIN}}:5672/${{RABBITMQ_DEFAULT_VHOST}}",
-      "Connection string the Plane services use",
+      "Address the Plane services use to reach the queue",
     ),
   },
 });
@@ -95,9 +95,9 @@ const minio = service("plane-minio", {
   replicas,
   volumeMounts: { "/export": uploads },
   env: {
-    MINIO_ROOT_USER: v(secret(20), "Storage access key, generated at deploy"),
-    MINIO_ROOT_PASSWORD: v(secret(40), "Storage secret key, generated at deploy"),
-    S3_ENDPOINT_URL: v("http://${{RAILWAY_PRIVATE_DOMAIN}}:9000", "Storage endpoint on the private network"),
+    MINIO_ROOT_USER: v(secret(20), "File storage access key. Railway creates it when you deploy"),
+    MINIO_ROOT_PASSWORD: v(secret(40), "File storage secret key. Railway creates it when you deploy"),
+    S3_ENDPOINT_URL: v("http://${{RAILWAY_PRIVATE_DOMAIN}}:9000", "Address the Plane services use to reach file storage"),
   },
 });
 
@@ -114,21 +114,21 @@ const api = service("api", {
   replicas,
   env: {
     PORT: v("8000", "Port the API listens on"),
-    GUNICORN_WORKERS: v("1", "API worker processes; raise together with memory"),
-    SECRET_KEY: v(secret(50), "Django secret key, generated at deploy"),
-    LIVE_SERVER_SECRET_KEY: v(secret(64, "abcdef0123456789"), "Secret shared with live, generated at deploy"),
-    WEB_URL: v("https://${{proxy.RAILWAY_PUBLIC_DOMAIN}}", "Public URL of this Plane instance"),
-    CORS_ALLOWED_ORIGINS: v("https://${{proxy.RAILWAY_PUBLIC_DOMAIN}}", "Origins allowed to call the API"),
-    DATABASE_URL: v("${{plane-db.DATABASE_URL}}", "Postgres connection string"),
-    REDIS_URL: v("${{plane-redis.REDIS_URL}}", "Valkey connection string"),
-    AMQP_URL: v("${{plane-mq.AMQP_URL}}", "RabbitMQ connection string"),
-    USE_MINIO: v("1", "Use the bundled object storage"),
+    GUNICORN_WORKERS: v("1", "Number of API processes. More handle more users and use more memory"),
+    SECRET_KEY: v(secret(50), "Key Plane signs sessions with. Railway creates it when you deploy"),
+    LIVE_SERVER_SECRET_KEY: v(secret(64, "abcdef0123456789"), "Key shared with the live service. Railway creates it when you deploy"),
+    WEB_URL: v("https://${{proxy.RAILWAY_PUBLIC_DOMAIN}}", "Your Plane address. It follows the proxy's public domain"),
+    CORS_ALLOWED_ORIGINS: v("https://${{proxy.RAILWAY_PUBLIC_DOMAIN}}", "Sites allowed to call the API. Same as your Plane address"),
+    DATABASE_URL: v("${{plane-db.DATABASE_URL}}", "Database address, from plane-db"),
+    REDIS_URL: v("${{plane-redis.REDIS_URL}}", "Cache address, from plane-redis"),
+    AMQP_URL: v("${{plane-mq.AMQP_URL}}", "Queue address, from plane-mq"),
+    USE_MINIO: v("1", "Keep uploads in the bundled file storage"),
     // Railway ends TLS at its edge, so Plane must sign upload URLs as https.
-    MINIO_ENDPOINT_SSL: v("1", "Sign upload URLs as https, since Railway ends TLS"),
-    AWS_ACCESS_KEY_ID: v("${{plane-minio.MINIO_ROOT_USER}}", "Storage access key"),
-    AWS_SECRET_ACCESS_KEY: v("${{plane-minio.MINIO_ROOT_PASSWORD}}", "Storage secret key"),
-    AWS_S3_ENDPOINT_URL: v("${{plane-minio.S3_ENDPOINT_URL}}", "Storage endpoint"),
-    AWS_S3_BUCKET_NAME: v("uploads", "Bucket for uploads; Plane creates it on start"),
+    MINIO_ENDPOINT_SSL: v("1", "Make upload links use https, as Railway serves only https"),
+    AWS_ACCESS_KEY_ID: v("${{plane-minio.MINIO_ROOT_USER}}", "File storage access key, from plane-minio"),
+    AWS_SECRET_ACCESS_KEY: v("${{plane-minio.MINIO_ROOT_PASSWORD}}", "File storage secret key, from plane-minio"),
+    AWS_S3_ENDPOINT_URL: v("${{plane-minio.S3_ENDPOINT_URL}}", "File storage address, from plane-minio"),
+    AWS_S3_BUCKET_NAME: v("uploads", "Folder for uploaded files. Plane creates it on first start"),
   },
 });
 
@@ -160,10 +160,10 @@ const live = service("live", {
   healthcheck: "/live/health",
   replicas,
   env: {
-    PORT: v("3000", "Port the server listens on"),
-    API_BASE_URL: v("http://${{api.RAILWAY_PRIVATE_DOMAIN}}:8000", "API on the private network"),
+    PORT: v("3000", "Port the live service listens on"),
+    API_BASE_URL: v("http://${{api.RAILWAY_PRIVATE_DOMAIN}}:8000", "API address on the private network"),
     LIVE_SERVER_SECRET_KEY: v("${{api.LIVE_SERVER_SECRET_KEY}}", "Same as LIVE_SERVER_SECRET_KEY on api"),
-    REDIS_URL: v("${{plane-redis.REDIS_URL}}", "Valkey connection string"),
+    REDIS_URL: v("${{plane-redis.REDIS_URL}}", "Cache address, from plane-redis"),
   },
 });
 
@@ -176,14 +176,14 @@ const frontend = (name: string, img: string, healthcheck = "/") =>
     source: image(`${img}:${PLANE}`),
     healthcheck,
     replicas,
-    env: { PORT: v("3000", "Port Plane's image serves on; the healthcheck uses it") },
+    env: { PORT: v("3000", "Port this service listens on. Railway checks its health here") },
   });
 
 const web = frontend("web", "makeplane/plane-frontend");
 const space = frontend("space", "makeplane/plane-space", "/spaces/");
 const admin = frontend("admin", "makeplane/plane-admin");
 
-const host = (svc: string) => v(`\${{${svc}.RAILWAY_PRIVATE_DOMAIN}}`, `Private hostname of ${svc}`);
+const host = (svc: string) => v(`\${{${svc}.RAILWAY_PRIVATE_DOMAIN}}`, `Private address of ${svc}`);
 
 // Plane's Caddy proxy with the upstreams pointed at Railway's private
 // hostnames. The only public service. Deploying from a fork? Point this at it.
@@ -195,8 +195,8 @@ const proxy = service("proxy", {
   // A generated *.up.railway.app domain on port 80.
   networking: { serviceDomains: { "<hasDomain>": { port: 80 } } },
   env: {
-    PORT: v("80", "Port Caddy listens on; the domain and healthcheck use it"),
-    BUCKET_NAME: v("${{api.AWS_S3_BUCKET_NAME}}", "Path routed to file storage"),
+    PORT: v("80", "Port the proxy listens on. Your public domain points here"),
+    BUCKET_NAME: v("${{api.AWS_S3_BUCKET_NAME}}", "Folder for uploaded files, from api"),
     WEB_HOST: host("web"),
     SPACE_HOST: host("space"),
     ADMIN_HOST: host("admin"),

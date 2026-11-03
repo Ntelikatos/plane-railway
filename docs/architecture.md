@@ -6,17 +6,18 @@ This template runs [Plane](https://plane.so) Community Edition, the AGPL-3.0 ope
 
 ```
                  Railway edge (HTTPS, public domain)
-                              │
-                           proxy  (Caddy, Plane's routes)
-   ┌──────────┬──────────┬────┴─────┬───────────┬──────────────┐
-   /*        /spaces/*  /god-mode/* /live/*     /api/* /auth/*  /uploads/*
-   web       space      admin       live        api            plane-minio
-                                     │           │
-                                     │     worker, beat-worker
-                                     │           │
-                          plane-redis ◄──────────┼──► plane-mq
-                                                 ▼
-                                             plane-db
+                              |
+                            proxy  (Caddy, Plane's routes)
+     +-----------+-----------+----+------+-----------+--------------+
+     /*       /spaces/*   /god-mode/*  /live/*   /api/* /auth/*  /uploads/*
+     web       space       admin        live      api            plane-minio
+                                         |         |
+                                         |   worker, beat-worker
+                                         |         |
+                              plane-redis <--------+--------> plane-mq
+                                                   |
+                                                   v
+                                               plane-db
 ```
 
 | Railway service | Image | Compose service | Volume |
@@ -38,7 +39,7 @@ Every image is pinned to the tag in Plane's compose file for the release. `.rail
 
 ## How each compose setting was translated
 
-Railway's guide [Deploy a Docker Compose App to Production](https://docs.railway.com/guides/docker-compose) gives the mapping: each compose service becomes a Railway service, `image:` becomes a Docker image source, named volumes become Railway volumes at the same mount path, and `networks:` and `depends_on:` have no equivalent.
+Railway's guide [Deploy a Docker Compose App to Production](https://railway.com/guides/docker-compose) gives the mapping: each compose service becomes a Railway service, `image:` becomes a Docker image source, named volumes become Railway volumes at the same mount path, and `networks:` and `depends_on:` have no equivalent.
 
 - **Hostnames.** Compose services reach each other by service name (`api:8000`). Railway services reach each other at `<service>.railway.internal` ([private networking](https://docs.railway.com/networking/private-networking/how-it-works#internal-dns)). Connection strings are built from `RAILWAY_PRIVATE_DOMAIN` with [reference variables](https://docs.railway.com/variables#referencing-another-services-variable), as Railway's [template best practices](https://docs.railway.com/templates/best-practices#private-networking) recommend.
 - **The proxy.** Plane's Caddyfile names the compose hostnames directly, so `proxy/Dockerfile` copies a Caddyfile that reads them from variables instead. The routes are Plane's. The ACME block is gone because Railway's edge terminates TLS, and Caddy listens on plain HTTP on `PORT`.
