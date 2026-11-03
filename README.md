@@ -46,6 +46,7 @@ You don't need to change any variable. These are the ones people change most. Al
 - **Your own domain.** Add it to the `proxy` service under **Settings > Networking**. Then redeploy `api`, `worker` and `beat-worker`, so Plane uses the new address in its links.
 - **Bigger uploads.** The upload limit is 5 MB. To raise it, set `FILE_SIZE_LIMIT` in bytes on `api`, `worker` and `proxy`.
 - **More API capacity.** Raise `GUNICORN_WORKERS` on `api`. Each extra process uses more memory.
+- **Faster background jobs.** Raise `WORKER_CONCURRENCY` on `worker` (2 by default). Each extra process uses more memory. Without this setting, the worker starts one process per CPU that Railway shows it. In our test that was 48 processes and about 3.7 GB.
 - **Email.** Plane needs SMTP to send invites and sign-in codes. Set it up in the admin pages under **Email**. Plane keeps these settings in its database, not in variables.
 
 ## Cost
