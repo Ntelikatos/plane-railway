@@ -33,9 +33,10 @@ After the deploy:
 
 1. Wait until all twelve services are online, then open the public URL of the `proxy` service.
 2. Click **Get started** and create the admin account straight away. Until you do, anyone who finds the URL can create it instead.
-3. Create your workspace in the popup.
+3. Click **Create workspace** in the popup, name your workspace and create it.
 4. Open **Authentication** in the admin menu and turn off **Allow anyone to sign up even without an invite**.
-5. Go to your Plane URL and sign in with the same email and password.
+5. Go to your Plane URL, sign in with the same email and password, and confirm your name.
+6. Close the welcome popup with **No thanks**. You are now on your Plane dashboard.
 
 Turn on daily backups for the `plane-db` and `plane-minio` volumes in each service's **Backups** tab.
 
