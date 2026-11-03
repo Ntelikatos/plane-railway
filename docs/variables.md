@@ -81,6 +81,7 @@ The template sets every variable, so a deploy needs no input. This page lists th
 | `AWS_SECRET_ACCESS_KEY` | `${{api.AWS_SECRET_ACCESS_KEY}}` | Same as AWS_SECRET_ACCESS_KEY on api |
 | `AWS_S3_ENDPOINT_URL` | `${{api.AWS_S3_ENDPOINT_URL}}` | Same as AWS_S3_ENDPOINT_URL on api |
 | `AWS_S3_BUCKET_NAME` | `${{api.AWS_S3_BUCKET_NAME}}` | Same as AWS_S3_BUCKET_NAME on api |
+| `WORKER_CONCURRENCY` | `2` | Number of background job processes. More run more jobs at once and use more memory |
 
 ## beat-worker
 

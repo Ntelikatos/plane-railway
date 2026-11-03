@@ -141,11 +141,16 @@ const backendEnv = Object.fromEntries(
   ].map((key) => [key, v(`\${{api.${key}}}`, `Same as ${key} on api`)]),
 );
 
+// bin/docker-entrypoint-worker.sh with a fixed pool size. Without one, Celery
+// starts a process per CPU it can see: 48 on Railway, about 3.7 GB of memory.
 const worker = service("worker", {
   source: image(`makeplane/plane-backend:${PLANE}`),
-  start: "./bin/docker-entrypoint-worker.sh",
+  start: `/bin/sh -c 'python manage.py wait_for_db && python manage.py wait_for_migrations && exec celery -A plane worker -l info --concurrency "$WORKER_CONCURRENCY"'`,
   replicas,
-  env: backendEnv,
+  env: {
+    ...backendEnv,
+    WORKER_CONCURRENCY: v("2", "Number of background job processes. More run more jobs at once and use more memory"),
+  },
 });
 
 const beatWorker = service("beat-worker", {
